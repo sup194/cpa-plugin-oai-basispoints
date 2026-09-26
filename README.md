@@ -39,6 +39,22 @@ make test
 make build
 ```
 
+`make build` 面向 Linux amd64，需要对应的 C 编译器；在 macOS 或其他平台上发布多平台制品，请使用下面的 GitHub Actions 流程。
+
+## 发布到 GitHub Release
+
+本仓库使用 `.github/workflows/release.yml` 构建六个平台的原生动态库并上传 Release，安装包无需手动制作。
+
+1. 确认 `registry.json` 的 `repository`、插件注册元数据的 `GitHubRepository` 和发行仓库一致。
+2. 更新 `internal/basispoints/types.go` 中的 `Version`，并在 `CHANGELOG.md` 添加对应的 `## v<版本号>` 条目。首次发布当前版本时可沿用已有版本及条目。
+3. 运行 `go test -race ./...`、`go vet ./...`、`go mod tidy -diff` 和 `go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12`，检查通过后提交并推送。
+4. 在待发布提交上创建并推送 `v<版本号>` 标签，例如 `git tag v0.1.14` 后执行 `git push origin v0.1.14`。标签必须与代码中的 `Version` 完全匹配。
+5. 等待 Actions 中的 Release 工作流成功，检查 Release 附件包含六个平台的 ZIP 和 `checksums.txt`。工作流还为 Linux/macOS 提供 `.tar.gz`，供手动安装使用。
+
+CPA 插件商店要求 ZIP 名称为 `oai-basispoints_<版本号>_<goos>_<goarch>.zip`，其中版本号不带 `v`。ZIP 根目录只放 `oai-basispoints.so`（Linux）、`oai-basispoints.dylib`（macOS）或 `oai-basispoints.dll`（Windows），不包含生成的 `.h`、配置或凭据；`checksums.txt` 校验的是压缩包本身。
+
+手动重试已有标签时，在 Actions → Release → Run workflow 中填写 `release_tag`。工作流始终检出该标签的源码，因此源码修复后应发布新版本；不要通过移动已有发布标签更新源码。GitHub 自动附带的 Source code 压缩包不能代替插件制品。
+
 ## 协议边界
 
 - 上游请求始终带 `Authorization: Bearer <access_token>`、`chatgpt-account-id`、`x-openai-account-id` 和 `x-basispoints-auth-mode: chatgpt`。

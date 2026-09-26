@@ -29,8 +29,12 @@ func TestPluginStoreRegistryMatchesPlugin(t *testing.T) {
 	if plugin.ID != PluginID || plugin.Install.Type != "github-release" {
 		t.Fatalf("registry does not match published plugin: %+v", plugin)
 	}
-	if plugin.Repository != "https://github.com/JaxsonWang/cpa-plugin-oai-basispoints" {
+	if plugin.Repository != "https://github.com/sup194/cpa-plugin-oai-basispoints" {
 		t.Fatalf("unexpected release repository: %q", plugin.Repository)
+	}
+	metadata := registration(defaultConfig())["metadata"].(map[string]any)
+	if metadata["GitHubRepository"] != plugin.Repository {
+		t.Fatalf("plugin metadata repository %v does not match registry repository %q", metadata["GitHubRepository"], plugin.Repository)
 	}
 	if plugin.Name == "" || plugin.Description == "" || plugin.Author == "" {
 		t.Fatal("required registry display metadata is missing")
